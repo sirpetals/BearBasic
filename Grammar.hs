@@ -1,10 +1,34 @@
 module Grammar where
 import Parser (Alternative(..), Parser, oneIf, token, symbol, int)
 
-data Stmt = Let Char Integer deriving Show
+-- statement ::= PRINT expr-list
+--               IF expression relop expression THEN statement
+--               GOTO expression
+--               INPUT var-list
+--               LET var = expression
+--               GOSUB expression
+--               RETURN
+--               CLEAR
+--               LIST
+--               RUN
+--               END
+data Stmt = Let Expr Expr | Print [Expr] deriving Show
+
+statement :: Parser Stmt
+statement = do
+    symbol "LET"
+    v <- variable
+    symbol "="
+    Let v <$> expression
+    <|> do
+    symbol "PRINT"
+    Print <$> expressionList
+
+
 data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Var Char deriving Show
 
 -- expression ::= term + expression | term - expression | term
+-- expr-list  ::= (string|expression) (, (string|expression) )*
 -- term       ::= factor * term | factor / term | factor
 -- factor     ::= var | number | (expression)
 -- number     ::= (+|-|ε) 0 | 1 | 2 | 3 | ...
@@ -20,7 +44,15 @@ expression = do
     symbol "-"
     Sub t <$> expression
     <|>
-    term
+    token term
+
+expressionList :: Parser [Expr]
+expressionList = do
+    e <- expression
+    symbol ","
+    (e:) <$> expressionList
+    <|> do
+    (:[]) <$> expression
 
 term :: Parser Expr
 term = do
@@ -32,7 +64,7 @@ term = do
     symbol "/"
     Div f <$> term
     <|>
-    factor
+    token factor
 
 factor :: Parser Expr
 factor = do
@@ -41,9 +73,9 @@ factor = do
     symbol ")"
     return e
     <|>
-    number
+    token number
     <|>
-    variable
+    token variable
 
 number :: Parser Expr
 number = do

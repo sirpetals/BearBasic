@@ -28,10 +28,10 @@ instance Applicative Parser where
         fab <$> pa
 
 instance Monad Parser where
-    -- return :: a -> Parser a
+    return :: a -> Parser a
     return = pure
 
-    -- (>>=) :: Parser a -> (a -> Parser b) -> Parser b
+    (>>=) :: Parser a -> (a -> Parser b) -> Parser b
     (>>=) pa fapb = P (\cs ->
         case parse pa cs of
             Nothing -> Nothing
@@ -111,3 +111,6 @@ token pa = do
 
 symbol :: String -> Parser String
 symbol xs = token $ string xs
+
+something :: Parser ()
+something = undefined

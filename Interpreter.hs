@@ -1,8 +1,8 @@
 {- HLINT ignore "Use tuple-section" -}
 module Interpreter where
 
-import Grammar (Expr (..))
-import Dictionary (Dictionary, getValue)
+import Grammar (Expr (..), Stmt (..))
+import Dictionary (Dictionary, getValue, setValue)
 
 type State = Dictionary Char Integer
 newtype ST a = S (State -> Maybe (a, State))
@@ -38,6 +38,13 @@ instance Interpretable Expr where
     interpret (Sub a b) = (-) <$> interpret a <*> interpret b
     interpret (Mul a b) = (*) <$> interpret a <*> interpret b
     interpret (Div a b) = div <$> interpret a <*> interpret b
+
+instance Interpretable Stmt where
+    interpret :: Stmt -> ST Integer
+    interpret (Let (Var a) b) = S (\s -> 
+        case apply (interpret b) s of
+            Nothing -> Nothing
+            Just (x, s') -> Just (x, setValue s' (a, x)))
 
 apply :: ST a -> State -> Maybe (a, State)
 apply (S st) = st
