@@ -7,6 +7,9 @@ import Dictionary (Dictionary, getValue)
 type State = Dictionary Char Integer
 newtype ST a = S (State -> Maybe (a, State))
 
+class Interpretable f where
+    interpret :: f -> ST Integer
+
 instance Functor ST where
     fmap :: (a -> b) -> ST a -> ST b
     fmap fab sta = S (\s ->
@@ -24,12 +27,6 @@ instance Applicative ST where
             Nothing -> Nothing
             Just (fab, s') -> apply (fab <$> sta) s')
 
-apply :: ST a -> State -> Maybe (a, State)
-apply (S st) = st
-
-class Interpretable f where
-    interpret :: f -> ST Integer
-
 instance Interpretable Expr where
     interpret :: Expr -> ST Integer
     interpret (Val x)   = S (\s -> Just (x, s))
@@ -40,3 +37,7 @@ instance Interpretable Expr where
     interpret (Add a b) = (+) <$> interpret a <*> interpret b
     interpret (Sub a b) = (-) <$> interpret a <*> interpret b
     interpret (Mul a b) = (*) <$> interpret a <*> interpret b
+    interpret (Div a b) = div <$> interpret a <*> interpret b
+
+apply :: ST a -> State -> Maybe (a, State)
+apply (S st) = st

@@ -1,23 +1,24 @@
 module Grammar where
-import Parser
+import Parser (Alternative(..), Parser, oneIf, token, symbol, int)
 
-data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Var Char deriving Show
+data Stmt = Let Char Integer deriving Show
+data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Var Char deriving Show
 
--- expression ::= (+|-|ε) term ((+|-) term)*
--- term ::= factor ((*|/) factor)*
--- factor ::= var | number | (expression)
--- number ::= 0 | 1 | 2 | 3 | ...
--- var ::= A | B | C | ... | Z
+-- expression ::= term + expression | term - expression | term
+-- term       ::= factor * term | factor / term | factor
+-- factor     ::= var | number | (expression)
+-- number     ::= (+|-|ε) 0 | 1 | 2 | 3 | ...
+-- var        ::= A | B | C | ... | Z
 
 expression :: Parser Expr
 expression = do
     t <- term
     symbol "+"
-    Add t <$> term
+    Add t <$> expression
     <|> do
     t <- term
     symbol "-"
-    Sub t <$> term
+    Sub t <$> expression
     <|>
     term
 
@@ -25,7 +26,11 @@ term :: Parser Expr
 term = do
     f <- factor
     symbol "*"
-    Mul f <$> factor
+    Mul f <$> term
+    <|> do
+    f <- factor
+    symbol "/"
+    Div f <$> term
     <|>
     factor
 
