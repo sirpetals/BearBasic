@@ -12,17 +12,16 @@ parse :: Parser a -> String -> Maybe (a, String)
 parse (P pa) = pa
 
 instance Functor Parser where
-    -- fmap :: (a -> b) -> Parser a -> Parser b
     fmap :: (a -> b) -> Parser a -> Parser b
     fmap fab pa = do
         a <- pa
         return (fab a)
 
 instance Applicative Parser where
-    -- pure :: a -> Parser a
+    pure :: a -> Parser a
     pure a = P (\cs -> Just (a, cs))
 
-    -- (<*>) :: Parser (a -> b) -> Parser a -> Parser b
+    (<*>) :: Parser (a -> b) -> Parser a -> Parser b
     (<*>) pfab pa = do
         fab <- pfab
         fab <$> pa

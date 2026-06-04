@@ -12,18 +12,22 @@ import Parser (Alternative(..), Parser, oneIf, token, symbol, int)
 --               LIST
 --               RUN
 --               END
-data Stmt = Let Expr Expr | Print [Expr] deriving Show
+
+data Relop = GT | GTE | LT | LTE | NE | EQ deriving Show
+data Stmt = Print [Expr] | If Expr Relop Expr Stmt | Let Expr Expr | End deriving Show
 
 statement :: Parser Stmt
 statement = do
+    symbol "PRINT"
+    Print <$> expressionList
+    <|> do
     symbol "LET"
     v <- variable
     symbol "="
     Let v <$> expression
     <|> do
-    symbol "PRINT"
-    Print <$> expressionList
-
+    symbol "END"
+    return End
 
 data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Var Char deriving Show
 
