@@ -1,4 +1,5 @@
 {- HLINT ignore "Use tuple-section" -}
+{- HLINT ignore "Used otherwise as a pattern" -}
 module Interpreter where
 
 import Grammar (Expr (..), Stmt (..))
@@ -7,8 +8,7 @@ import Dictionary (Dictionary, getValue, setValue)
 type State = Dictionary Char Integer
 newtype ST a = S (State -> Maybe (a, State))
 
-class Interpretable f where
-    interpret :: f -> ST Integer
+data Result = Num Integer | Str String | Output String | Empty | Quit deriving Show
 
 instance Functor ST where
     fmap :: (a -> b) -> ST a -> ST b
@@ -27,24 +27,35 @@ instance Applicative ST where
             Nothing -> Nothing
             Just (fab, s') -> apply (fab <$> sta) s')
 
-instance Interpretable Expr where
-    interpret :: Expr -> ST Integer
-    interpret (Val x)   = S (\s -> Just (x, s))
-    interpret (Var v)   = S (\s ->
-        case getValue s v of
-            Nothing -> Nothing
-            Just a -> Just (a, s))
-    interpret (Add a b) = (+) <$> interpret a <*> interpret b
-    interpret (Sub a b) = (-) <$> interpret a <*> interpret b
-    interpret (Mul a b) = (*) <$> interpret a <*> interpret b
-    interpret (Div a b) = div <$> interpret a <*> interpret b
 
-instance Interpretable Stmt where
-    interpret :: Stmt -> ST Integer
-    interpret (Let (Var a) b) = S (\s -> 
-        case apply (interpret b) s of
-            Nothing -> Nothing
-            Just (x, s') -> Just (x, setValue s' (a, x)))
+interpretExpr :: Expr -> ST Integer
+interpretExpr (Val x)   = S (\s -> Just (x, s))
+interpretExpr (Var v)   = S (\s ->
+    case getValue s v of
+        Nothing -> Nothing
+        Just a -> Just (a, s))
+interpretExpr (Add a b) = (+) <$> interpretExpr a <*> interpretExpr b
+interpretExpr (Sub a b) = (-) <$> interpretExpr a <*> interpretExpr b
+interpretExpr (Mul a b) = (*) <$> interpretExpr a <*> interpretExpr b
+interpretExpr (Div a b) = div <$> interpretExpr a <*> interpretExpr b
+
+interpretStmt :: Stmt -> ST Result
+interpretStmt (Let (Var a) b) = S (\s ->
+    case apply (interpretExpr b) s of
+        Nothing -> Nothing
+        Just (x, s') -> Just (Empty, setValue s' (a, x)))
+interpretStmt (Print es) = S (\s ->
+    case listExprs es s of
+        Left err -> Just (Output err, s)
+        Right smth -> Just (Output (foldr (\a b -> a ++ " " ++ b) "" smth), s))
+interpretStmt End = S (\s -> Just (Quit, s))
+
+listExprs :: [Expr] -> State -> Either String [[Char]]
+listExprs [] _ = Right []
+listExprs (e:es) s =
+    case apply (interpretExpr e) s of
+        Nothing -> Left "Invalid element in expression list."
+        Just (v, s') -> (show v :) <$> listExprs es s'
 
 apply :: ST a -> State -> Maybe (a, State)
 apply (S st) = st

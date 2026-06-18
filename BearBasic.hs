@@ -1,7 +1,10 @@
-module BearBasic where
-import Interpreter (apply, Interpretable (..), State)
+module Main where
+import Interpreter (apply, interpretExpr, interpretStmt, State, Result (..))
 import Parser (parse)
 import Grammar (statement, Stmt (..), Expr, expression)
+
+main :: IO ()
+main = loop []
 
 loop :: State -> IO ()
 loop s = do
@@ -10,29 +13,26 @@ loop s = do
         Nothing -> do
             putStrLn "Parse error."
             loop s
-        Just (stmt, _) -> do
-            case stmt of
-                Print es -> do
-                    printList es s
+        Just (stmt, _) ->
+            case apply (interpretStmt stmt) s of
+                Nothing -> do 
+                    putStrLn "Execution error."
                     loop s
-                End ->
-                    return ()
-                _ ->
-                    case apply (interpret stmt) s of
-                        Nothing -> do 
-                            putStrLn "Execution error."
-                            loop s
-                        Just (result, s') -> loop s'
-
-    return ()
+                Just (result, s') ->
+                    case result of
+                        Output str -> do
+                            putStrLn str
+                            loop s'
+                        Empty -> loop s'
+                        Quit -> return ()
 
 printList :: [Expr] -> State -> IO ()
 printList [] s = putChar '\n'
 printList (e:es) s = 
-    case apply (interpret e) s of
+    case apply (interpretExpr e) s of
         Nothing -> putStrLn "Invalid element in expression list."
         Just (v, s') ->
             do
-                putStr $ show v
+                putStr $ show v ++ " "
                 printList es s
     
