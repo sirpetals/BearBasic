@@ -1,17 +1,18 @@
 module Grammar where
 import Parser (Alternative(..), Parser, oneIf, token, symbol, int)
 
--- statement ::= PRINT expr-list
+-- statement ::= 
+--x              PRINT expr-list
 --               IF expression relop expression THEN statement
 --               GOTO expression
 --               INPUT var-list
---               LET var = expression
+--x              LET var = expression
 --               GOSUB expression
 --               RETURN
 --               CLEAR
 --               LIST
 --               RUN
---               END
+--x              END
 
 data Relop = GT | GTE | LT | LTE | NE | EQ deriving Show
 data Stmt = Print [Expr] | If Expr Relop Expr Stmt | Let Expr Expr | End deriving Show
@@ -29,7 +30,6 @@ statement = do
     symbol "END"
     return End
 
-data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Var Char deriving Show
 
 -- expression ::= term + expression | term - expression | term
 -- expr-list  ::= (string|expression) (, (string|expression) )*
@@ -37,6 +37,8 @@ data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Ex
 -- factor     ::= var | number | (expression)
 -- number     ::= (+|-|ε) 0 | 1 | 2 | 3 | ...
 -- var        ::= A | B | C | ... | Z
+
+data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Var Char deriving Show
 
 expression :: Parser Expr
 expression = do
