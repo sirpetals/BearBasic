@@ -30,3 +30,5 @@ factor     ::= var | number | (expression)
 number     ::= (+|-|ε) 0 | 1 | 2 | 3 | ...
 var        ::= A | B | C | ... | Z
 ```
+
+Currently the only implemented statements are `PRINT`, `LET`, and `END` (a great selection i know). More comming soon.
