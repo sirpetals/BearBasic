@@ -27,7 +27,6 @@ instance Applicative ST where
             Nothing -> Nothing
             Just (fab, s') -> apply (fab <$> sta) s')
 
-
 interpretExpr :: Expr -> ST Integer
 interpretExpr (Val x)   = S (\s -> Just (x, s))
 interpretExpr (Var v)   = S (\s ->
@@ -44,11 +43,15 @@ interpretStmt (Let (Var a) b) = S (\s ->
     case apply (interpretExpr b) s of
         Nothing -> Nothing
         Just (x, s') -> Just (Empty, setValue s' (a, x)))
+
 interpretStmt (Print es) = S (\s ->
     case listExprs es s of
         Left err -> Just (Output err, s)
         Right smth -> Just (Output (foldr (\a b -> a ++ " " ++ b) "" smth), s))
+
 interpretStmt End = S (\s -> Just (Quit, s))
+
+interpretStmt _ = S (\s -> Just (Output "Statement not yet implemented.", s))
 
 listExprs :: [Expr] -> State -> Either String [[Char]]
 listExprs [] _ = Right []

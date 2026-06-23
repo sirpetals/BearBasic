@@ -29,6 +29,18 @@ term       ::= factor * term | factor / term | factor
 factor     ::= var | number | (expression)
 number     ::= (+|-|ε) 0 | 1 | 2 | 3 | ...
 var        ::= A | B | C | ... | Z
+relop      ::= > | >= | < | <= | <> | =
 ```
 
-Currently the only implemented statements are `PRINT`, `LET`, and `END` (a great selection i know). More comming soon.
+## Roadmap
+- [x] PRINT expr-list
+- [x] IF expression relop expression THEN statement
+- [x] GOTO expression
+- [x] INPUT var-list
+- [x] LET var = expression
+- [x] GOSUB expression
+- [ ] RETURN
+- [ ] CLEAR
+- [ ] LIST
+- [ ] RUN
+- [x] END

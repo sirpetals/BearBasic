@@ -13,7 +13,7 @@ loop s = do
         Nothing -> do
             putStrLn "Parse error."
             loop s
-        Just (stmt, _) ->
+        Just (stmt, "") ->
             case apply (interpretStmt stmt) s of
                 Nothing -> do 
                     putStrLn "Execution error."
@@ -25,6 +25,9 @@ loop s = do
                             loop s'
                         Empty -> loop s'
                         Quit -> return ()
+        _ -> do
+            putStrLn "Parse error."
+            loop s
 
 printList :: [Expr] -> State -> IO ()
 printList [] s = putChar '\n'

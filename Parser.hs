@@ -37,6 +37,7 @@ instance Monad Parser where
             Just (a, cs') -> parse (fapb a) cs')
 
 instance Alternative Parser where
+    empty :: Parser a
     empty = P (\cs -> Nothing)
 
     (<|>) :: Parser a -> Parser a -> Parser a

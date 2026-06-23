@@ -1,26 +1,29 @@
 module Grammar where
 import Parser (Alternative(..), Parser, oneIf, token, symbol, int)
 
--- statement ::= 
---x              PRINT expr-list
---               IF expression relop expression THEN statement
---               GOTO expression
---               INPUT var-list
---x              LET var = expression
---               GOSUB expression
---               RETURN
---               CLEAR
---               LIST
---               RUN
---x              END
-
-data Relop = GT | GTE | LT | LTE | NE | EQ deriving Show
-data Stmt = Print [Expr] | If Expr Relop Expr Stmt | Let Expr Expr | End deriving Show
+data Stmt = Print [Expr] | Input [Expr] | If Relop Expr Expr Stmt | Goto Expr 
+    | Gosub Expr | Let Expr Expr | End deriving Show
 
 statement :: Parser Stmt
 statement = do
     symbol "PRINT"
     Print <$> expressionList
+    <|> do
+    symbol "IF"
+    le <- expression
+    r <- relop
+    re <- expression
+    symbol "THEN"
+    If r le re <$> statement
+    <|> do
+    symbol "GOTO"
+    Goto <$> expression
+    <|> do
+    symbol "GOSUB"
+    Gosub <$> expression
+    <|> do
+    symbol "INPUT"
+    Input <$> varList
     <|> do
     symbol "LET"
     v <- variable
@@ -30,15 +33,30 @@ statement = do
     symbol "END"
     return End
 
+data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr
+    | Div Expr Expr | Var Char deriving Show
 
--- expression ::= term + expression | term - expression | term
--- expr-list  ::= (string|expression) (, (string|expression) )*
--- term       ::= factor * term | factor / term | factor
--- factor     ::= var | number | (expression)
--- number     ::= (+|-|ε) 0 | 1 | 2 | 3 | ...
--- var        ::= A | B | C | ... | Z
+data Relop = Gt | Gte | Lt | Lte | Eq | Ne deriving Show
 
-data Expr = Val Integer | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Var Char deriving Show
+relop :: Parser Relop
+relop = do
+    symbol ">"
+    return Gt
+    <|> do
+    symbol ">="
+    return Gte
+    <|> do
+    symbol "<"
+    return Lt
+    <|> do
+    symbol "<="
+    return Lte
+    <|> do
+    symbol "="
+    return Eq
+    <|> do
+    symbol "<>"
+    return Ne
 
 expression :: Parser Expr
 expression = do
@@ -90,3 +108,11 @@ number = do
 variable :: Parser Expr
 variable = do
     Var <$> token (oneIf (`elem` ['A' .. 'Z']))
+
+varList :: Parser [Expr]
+varList = do
+    v <- variable
+    symbol ","
+    (v:) <$> varList
+    <|> do
+    (:[]) <$> variable
