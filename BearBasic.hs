@@ -1,10 +1,14 @@
 module Main where
-import Interpreter (apply, interpretExpr, interpretStmt, State, Result (..))
+import Interpreter (apply, interpretExpr, interpretStmt, Result (..))
 import Parser (parse)
 import Grammar (statement, Stmt (..), Expr, expression)
+import Dictionary (State)
+
+initialState :: State
+initialState = ([], [], [], 0)
 
 main :: IO ()
-main = loop []
+main = loop initialState
 
 loop :: State -> IO ()
 loop s = do
@@ -18,7 +22,8 @@ loop s = do
                 Nothing -> do 
                     putStrLn "Execution error."
                     loop s
-                Just (result, s') ->
+                Just (result, s') -> do
+                    print s'
                     case result of
                         Output str -> do
                             putStrLn str
@@ -38,4 +43,3 @@ printList (e:es) s =
             do
                 putStr $ show v ++ " "
                 printList es s
-    

@@ -2,7 +2,7 @@ module Grammar where
 import Parser (Alternative(..), Parser, oneIf, token, symbol, int)
 
 data Stmt = Print [Expr] | Input [Expr] | If Relop Expr Expr Stmt | Goto Expr 
-    | Gosub Expr | Let Expr Expr | End deriving Show
+    | Gosub Expr | Return | Let Expr Expr | List | Run | End deriving Show
 
 statement :: Parser Stmt
 statement = do
@@ -22,6 +22,9 @@ statement = do
     symbol "GOSUB"
     Gosub <$> expression
     <|> do
+    symbol "RETURN"
+    return Return
+    <|> do
     symbol "INPUT"
     Input <$> varList
     <|> do
@@ -29,6 +32,12 @@ statement = do
     v <- variable
     symbol "="
     Let v <$> expression
+    <|> do
+    symbol "LIST"
+    return List
+    <|> do
+    symbol "RUN"
+    return Run
     <|> do
     symbol "END"
     return End
@@ -40,23 +49,23 @@ data Relop = Gt | Gte | Lt | Lte | Eq | Ne deriving Show
 
 relop :: Parser Relop
 relop = do
-    symbol ">"
-    return Gt
-    <|> do
     symbol ">="
     return Gte
-    <|> do
-    symbol "<"
-    return Lt
     <|> do
     symbol "<="
     return Lte
     <|> do
-    symbol "="
-    return Eq
-    <|> do
     symbol "<>"
     return Ne
+    <|> do
+    symbol ">"
+    return Gt
+    <|> do
+    symbol "<"
+    return Lt
+    <|> do
+    symbol "="
+    return Eq
 
 expression :: Parser Expr
 expression = do
