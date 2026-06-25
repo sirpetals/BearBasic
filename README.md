@@ -34,11 +34,11 @@ relop      ::= > | >= | < | <= | <> | =
 
 ## Roadmap
 - [x] PRINT expr-list
-- [?] IF expression relop expression THEN statement
+- [x] IF expression relop expression THEN statement
 - [?] GOTO expression
+- [?] GOSUB expression
 - [?] INPUT var-list
 - [x] LET var = expression
-- [?] GOSUB expression
 - [?] RETURN
 - [ ] CLEAR
 - [?] LIST
